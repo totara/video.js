@@ -33,37 +33,25 @@ import window from 'global/window';
 /**
  * Resolve and parse the elements of a URL.
  *
- * @param  {String} url
- *         The url to parse
+ * @function
+ * @param    {String} url
+ *           The url to parse
  *
- * @return {url:URLObject}
- *         An object of url details
+ * @return   {url:URLObject}
+ *           An object of url details
  */
 export const parseUrl = function(url) {
+  // This entire method can be replace with URL once we are able to drop IE11
+
   const props = ['protocol', 'hostname', 'port', 'pathname', 'search', 'hash', 'host'];
 
   // add the url to an anchor and let the browser parse the URL
-  let a = document.createElement('a');
+  const a = document.createElement('a');
 
   a.href = url;
 
-  // IE8 (and 9?) Fix
-  // ie8 doesn't parse the URL correctly until the anchor is actually
-  // added to the body, and an innerHTML is needed to trigger the parsing
-  const addToBody = (a.host === '' && a.protocol !== 'file:');
-  let div;
-
-  if (addToBody) {
-    div = document.createElement('div');
-    div.innerHTML = `<a href="${url}"></a>`;
-    a = div.firstChild;
-    // prevent the div from affecting layout
-    div.setAttribute('style', 'display:none; position:absolute;');
-    document.body.appendChild(div);
-  }
-
   // Copy the specific URL properties to a new object
-  // This is also needed for IE8 because the anchor loses its
+  // This is also needed for IE because the anchor loses its
   // properties when it's removed from the dom
   const details = {};
 
@@ -71,7 +59,7 @@ export const parseUrl = function(url) {
     details[props[i]] = a[props[i]];
   }
 
-  // IE9 adds the port to the host property unlike everyone else. If
+  // IE adds the port to the host property unlike everyone else. If
   // a port identifier is added for standard ports, strip it.
   if (details.protocol === 'http:') {
     details.host = details.host.replace(/:80$/, '');
@@ -81,24 +69,29 @@ export const parseUrl = function(url) {
     details.host = details.host.replace(/:443$/, '');
   }
 
-  if (addToBody) {
-    document.body.removeChild(div);
+  if (!details.protocol) {
+    details.protocol = window.location.protocol;
+  }
+
+  /* istanbul ignore if */
+  if (!details.host) {
+    details.host = window.location.host;
   }
 
   return details;
 };
 
 /**
- * Get absolute version of relative URL. Used to tell flash correct URL.
+ * Get absolute version of relative URL. Used to tell Flash the correct URL.
  *
+ * @function
+ * @param    {string} url
+ *           URL to make absolute
  *
- * @param  {string} url
- *         URL to make absolute
+ * @return   {string}
+ *           Absolute URL
  *
- * @return {string}
- *         Absolute URL
- *
- * @see http://stackoverflow.com/questions/470832/getting-an-absolute-url-from-a-relative-one-ie6-issue
+ * @see      http://stackoverflow.com/questions/470832/getting-an-absolute-url-from-a-relative-one-ie6-issue
  */
 export const getAbsoluteURL = function(url) {
   // Check if absolute URL
@@ -117,16 +110,17 @@ export const getAbsoluteURL = function(url) {
  * Returns the extension of the passed file name. It will return an empty string
  * if passed an invalid path.
  *
- * @param {string} path
- *        The fileName path like '/path/to/file.mp4'
+ * @function
+ * @param    {string} path
+ *           The fileName path like '/path/to/file.mp4'
  *
- * @returns {string}
- *          The extension in lower case or an empty string if no
- *          extension could be found.
+ * @return  {string}
+ *           The extension in lower case or an empty string if no
+ *           extension could be found.
  */
 export const getFileExtension = function(path) {
   if (typeof path === 'string') {
-    const splitPathRe = /^(\/?)([\s\S]*?)((?:\.{1,2}|[^\/]+?)(\.([^\.\/\?]+)))(?:[\/]*|[\?].*)$/i;
+    const splitPathRe = /^(\/?)([\s\S]*?)((?:\.{1,2}|[^\/]+?)(\.([^\.\/\?]+)))(?:[\/]*|[\?].*)$/;
     const pathParts = splitPathRe.exec(path);
 
     if (pathParts) {
@@ -140,14 +134,23 @@ export const getFileExtension = function(path) {
 /**
  * Returns whether the url passed is a cross domain request or not.
  *
- * @param {string} url
- *        The url to check.
+ * @function
+ * @param    {string} url
+ *           The url to check.
  *
- * @return {boolean}
- *         Whether it is a cross domain request or not.
+ * @param    {Object} [winLoc]
+ *           the domain to check the url against, defaults to window.location
+ *
+ * @param    {string} [winLoc.protocol]
+ *           The window location protocol defaults to window.location.protocol
+ *
+ * @param    {string} [winLoc.host]
+ *           The window location host defaults to window.location.host
+ *
+ * @return   {boolean}
+ *           Whether it is a cross domain request or not.
  */
-export const isCrossOrigin = function(url) {
-  const winLoc = window.location;
+export const isCrossOrigin = function(url, winLoc = window.location) {
   const urlInfo = parseUrl(url);
 
   // IE8 protocol relative urls will return ':' for protocol
