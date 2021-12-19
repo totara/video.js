@@ -1,7 +1,7 @@
 {
   "name": "video.js",
   "description": "An HTML5 and Flash video player with a common API and skin for both.",
-  "version": "5.18.4",
+  "version": "5.18.4-totara1",
   "main": "./es5/video.js",
   "style": "./dist/video-js.css",
   "copyright": "Copyright Brightcove, Inc. <https://www.brightcove.com/>",
@@ -32,7 +32,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/videojs/video.js.git"
+    "url": "https://github.com/totara/video.js.git"
   },
   "dependencies": {
     "babel-runtime": "^6.9.2",
